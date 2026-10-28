@@ -1,0 +1,21 @@
+common --enable_bzlmod
+common --repo_env=ASPECT_TOOLS_TELEMETRY=-all
+
+build --java_language_version=25
+build --java_runtime_version=remotejdk_25
+build --tool_java_language_version=25
+build --tool_java_runtime_version=remotejdk_25
+build --experimental_strict_java_deps=error
+
+build --javacopt=-encoding
+build --javacopt=UTF-8
+build --javacopt=-Xlint:all
+build --javacopt=-Werror
+
+build:lint --aspects=//tools/lint:linters.bzl%checkstyle,//tools/lint:linters.bzl%spotbugs
+build:lint --@aspect_rules_lint//lint:fail_on_violation
+
+test --test_output=errors
+
+# Match the legacy coverage scope: exclude the entrypoint and injection wiring.
+coverage --instrumentation_filter=^//:app$
