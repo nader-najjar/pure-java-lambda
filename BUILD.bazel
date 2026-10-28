@@ -1,0 +1,132 @@
+load("//tools/lint:linters.bzl", "checkstyle_test", "spotbugs_test")
+load("@rules_java//java:defs.bzl", "java_binary", "java_library", "java_test")
+load("@rules_pkg//:pkg.bzl", "pkg_zip")
+
+package(default_visibility = ["//visibility:private"])
+
+exports_files([
+    "checkstyle.xml",
+    "maven_install.json",
+    "spotbugs-exclude.xml",
+], visibility = ["//tools/lint:__pkg__"])
+
+java_library(
+    name = "app",
+    srcs = glob(
+        ["src/main/java/**/*.java"],
+        exclude = [
+            "src/main/java/io/template/composition/**/*.java",
+            "src/main/java/io/template/LambdaHandler.java",
+        ],
+    ),
+    deps = [
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+        "@maven//:com_fasterxml_jackson_core_jackson_core",
+        "@maven//:com_fasterxml_jackson_core_jackson_databind",
+        "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jsr310",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_inject_guice",
+        "@maven//:org_glassfish_expressly_expressly",
+        "@maven//:jakarta_validation_jakarta_validation_api",
+        "@maven//:org_hibernate_validator_hibernate_validator",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:software_amazon_awssdk_regions",
+        "@maven//:software_amazon_awssdk_dynamodb",
+    ],
+)
+
+java_library(
+    name = "composition",
+    srcs = glob(["src/main/java/io/template/composition/**/*.java"]),
+    deps = [
+        ":app",
+        "@maven//:com_google_inject_guice",
+        "@maven//:software_amazon_awssdk_regions",
+        "@maven//:software_amazon_awssdk_dynamodb",
+    ],
+)
+
+java_library(
+    name = "lambda_entrypoint",
+    srcs = ["src/main/java/io/template/LambdaHandler.java"],
+    deps = [
+        ":app",
+        ":composition",
+        "@maven//:com_amazonaws_aws_lambda_java_core",
+        "@maven//:com_google_inject_guice",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+)
+
+java_library(
+    name = "logging",
+    resources = glob(["src/main/resources/**"]),
+    resource_strip_prefix = "src/main/resources",
+    runtime_deps = ["@maven//:ch_qos_logback_logback_classic"],
+)
+
+# The deploy JAR bundles the handler and its runtime dependencies for Lambda.
+java_binary(
+    name = "lambda_bin",
+    create_executable = False,
+    stamp = 0,
+    runtime_deps = [":lambda_entrypoint", ":logging"],
+)
+
+pkg_zip(
+    name = "lambda_deployment_package",
+    srcs = [":lambda_bin_deploy.jar"],
+    out = "lambda-deployment-package.zip",
+    package_dir = "lib",
+    stamp = 0,
+)
+
+java_test(
+    name = "all_tests",
+    srcs = glob(["src/test/java/**/*.java"]),
+    args = [
+        "execute",
+        "--select-package=io.template",
+        "--fail-if-no-tests",
+        "--disable-banner",
+    ],
+    jvm_flags = ["-XX:+EnableDynamicAgentLoading"],
+    main_class = "org.junit.platform.console.ConsoleLauncher",
+    use_testrunner = False,
+    deps = [
+        ":app",
+        ":composition",
+        "@maven//:com_github_spotbugs_spotbugs_annotations",
+        "@maven//:com_google_inject_guice",
+        "@maven//:org_junit_jupiter_junit_jupiter_api",
+        "@maven//:org_junit_jupiter_junit_jupiter_params",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:org_mockito_mockito_junit_jupiter",
+        "@maven//:software_amazon_awssdk_regions",
+        "@maven//:software_amazon_awssdk_dynamodb",
+    ],
+    runtime_deps = [
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:org_junit_platform_junit_platform_console_standalone",
+    ],
+)
+
+checkstyle_test(
+    name = "checkstyle",
+    srcs = [
+        ":all_tests",
+        ":app",
+        ":composition",
+        ":lambda_entrypoint",
+    ],
+)
+
+spotbugs_test(
+    name = "spotbugs",
+    srcs = [
+        ":all_tests",
+        ":app",
+        ":composition",
+        ":lambda_entrypoint",
+    ],
+)
