@@ -24,7 +24,7 @@ eclipse {
 }
 
 base {
-    archivesName.set("pure-java")
+    archivesName.set("pure-java-lambda")
 }
 
 java {
@@ -78,6 +78,10 @@ dependencies {
     implementation(platform("software.amazon.awssdk:bom:2.55.11"))
     implementation("software.amazon.awssdk:regions")
     implementation("software.amazon.awssdk:dynamodb")
+
+    // AWS Lambda
+    implementation("com.amazonaws:aws-lambda-java-core:1.4.0")
+    runtimeOnly("com.amazonaws:aws-lambda-java-runtime-interface-client:2.8.3")
 
     // Validators
     implementation(platform("org.hibernate.validator:hibernate-validator-bom:9.1.0.Final"))
@@ -174,7 +178,7 @@ tasks.check {
 
 tasks.withType<JacocoReportBase>().configureEach {
     val excludes = listOf(
-        "io/template/Main.class",
+        "io/template/LambdaHandler.class",
         "io/template/composition/*"
     )
     classDirectories.setFrom(
