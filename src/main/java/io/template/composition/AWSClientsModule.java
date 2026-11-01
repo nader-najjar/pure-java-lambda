@@ -1,6 +1,7 @@
 package io.template.composition;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import io.template.environment.models.EnvironmentVariables;
@@ -14,5 +15,9 @@ public class AWSClientsModule extends AbstractModule {
         return DynamoDbClient.builder()
                 .region(environmentVariables.awsRegion())
                 .build();
+    }
+
+    public static void closeResources(Injector injector) {
+        injector.getInstance(DynamoDbClient.class).close();
     }
 }
