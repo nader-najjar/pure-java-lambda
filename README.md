@@ -1,6 +1,6 @@
-# pure-java
+# pure-java-lambda
 
-> Java best practices.
+> Java best practices for AWS Lambda container images.
 
 ### 1. Prerequisites
 
@@ -74,6 +74,8 @@ For `build`, Universal Build recreates `build/release/` and archives its content
 - Checkstyle and SpotBugs: `build/quality-reports/checkstyle/` and `build/quality-reports/spotbugs/`.
 - Runnable application and dependencies: `build/release/idiomatic-artifacts/`.
 - Release archive: `build/release-artifact.tar.gz`.
+
+The runtime launches `io.template.LambdaHandler::handleRequest` through the AWS Lambda runtime interface client. Build the image on Linux for the target Lambda architecture; invocation requires the Lambda Runtime API.
 
 ### 3. Development Workflows
 
