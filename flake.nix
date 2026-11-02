@@ -9,7 +9,6 @@
 
     in
     {
-
       devShells = forEachSystem (system:
 
         let
@@ -20,7 +19,6 @@
 
         in
         {
-
           buildtime = pkgs.mkShell {
             packages = [
               chosenJdk
@@ -40,8 +38,6 @@
 
             RELEASE_TYPE = "container";
           };
-
-
         }
 
       );
@@ -67,6 +63,5 @@
         }
 
       );
-
     };
 }
