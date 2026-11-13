@@ -1,13 +1,13 @@
 package io.template.execution;
 
 import com.google.inject.Inject;
-import io.template.environment.models.EnvironmentVariables;
-import io.template.environment.models.Stage;
+import io.template.environment.EnvironmentVariables;
 import io.template.execution.models.ApplicationInput;
 import io.template.samplebusinesslayer.CalculationResultStore;
 import io.template.samplebusinesslayer.Calculator;
 import io.template.samplebusinesslayer.models.CalculationRequest;
 import io.template.samplebusinesslayer.models.CalculationResult;
+import io.template.shared.models.Stage;
 import io.template.shared.utilities.JsonSanitizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +36,8 @@ public class Executor {
     }
 
     public void execute(String[] args) {
-        Stage stage = environmentVariables.stage();
-        Region awsRegion = environmentVariables.awsRegion();
+        Stage stage = Stage.valueOf(environmentVariables.stage());
+        Region awsRegion = Region.of(environmentVariables.awsRegion());
         LOGGER.info("Executing with stage: {}, awsRegion: {}", stage, awsRegion);
 
         if (args == null || args.length == 0) {
